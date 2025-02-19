@@ -3,19 +3,34 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background-start: #1a1a1a;
+  --background-end: #2d2d2d;
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+  background: linear-gradient(to bottom, var(--background-start), var(--background-end));
+  background-attachment: fixed;
+  color: white;
+  overscroll-behavior: none;
+}
+
+/* Prevent white flash during scroll on mobile */
+html {
+  background: var(--background-start);
+}
+
+/* For iOS momentum scrolling */
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Hide scrollbar but keep functionality */
+::-webkit-scrollbar {
+  display: none;
+}
+
+/* For Firefox */
+* {
+  scrollbar-width: none;
 }
