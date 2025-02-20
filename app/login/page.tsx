@@ -1,12 +1,15 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [businessUnit, setBusinessUnit] = useState('');
+  const router = useRouter();
 
   const handleLogin = async () => {
+    console.log('Attempting to login with:', { username, businessUnit }); // Debug log
     try {
       const response = await fetch('/api/auth', {
         method: 'POST',
@@ -16,12 +19,24 @@ export default function LoginPage() {
         body: JSON.stringify({ username, businessUnit }),
       });
 
+      console.log('Response status:', response.status); // Log response status
       if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Login failed:', errorData); // Log error details
         throw new Error('Failed to login');
       }
 
       const data = await response.json();
       console.log('User logged in:', data);
+
+      // Store user data in localStorage
+      localStorage.setItem('user', JSON.stringify(data));
+
+      // Set the user cookie
+      document.cookie = `user=${data.id}; path=/`;
+
+      // Navigate to events page
+      router.push('/events');
     } catch (error) {
       console.error('Login error:', error);
     }
