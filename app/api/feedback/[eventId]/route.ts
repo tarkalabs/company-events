@@ -33,9 +33,9 @@ export async function POST(
 
         const { rating, comments } = await request.json();
 
-        if (typeof rating !== 'number' || !comments) {
+        if (typeof rating !== 'number' || rating === 0) {
             return NextResponse.json(
-                { error: 'Rating and comments are required' },
+                { error: 'Rating is required and must be greater than 0' },
                 { status: 400 }
             );
         }
@@ -51,7 +51,7 @@ export async function POST(
             eventId: params.eventId,
             userId,
             rating,
-            comments,
+            comments: comments || ''
         });
 
         return NextResponse.json(feedback);

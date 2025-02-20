@@ -64,12 +64,16 @@ const EventCard = React.memo(({ event, feedback, isEditing, onSubmit, onEdit }: 
               value={tempComments}
               onChange={(e) => setTempComments(e.target.value)}
               className="w-full p-2 rounded bg-white/10 text-white min-h-[100px] text-sm sm:text-base"
-              placeholder="Add your comments..."
+              placeholder="Add your comments (optional)..."
             />
             <div className="flex flex-col sm:flex-row gap-2">
               <button
                 onClick={() => onSubmit(tempRating, tempComments)}
-                className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                disabled={tempRating === 0}
+                className={`w-full sm:w-auto px-4 py-2 text-white rounded-lg transition-colors ${tempRating === 0
+                    ? 'bg-blue-600/50 cursor-not-allowed'
+                    : 'bg-blue-600 hover:bg-blue-700'
+                  }`}
               >
                 Save
               </button>

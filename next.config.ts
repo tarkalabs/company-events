@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  env: {
+    ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
+  },
 };
 
 export default nextConfig;
