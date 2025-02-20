@@ -8,9 +8,5 @@
 [[plugins]]
   package = "@netlify/plugin-nextjs"
 
-# Add this to ensure Prisma Client is generated during build
-[[plugins]]
-  package = "netlify-plugin-prisma-client"
-
 [functions]
   included_files = ["prisma/**"] 
