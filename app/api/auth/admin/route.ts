@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 
+const FALLBACK_ADMIN_PASSWORD = "0;?BYA5MIEKFo<~p";
+
 export async function POST(request: Request) {
     try {
         const { username, password } = await request.json();
@@ -11,8 +13,9 @@ export async function POST(request: Request) {
             );
         }
 
-        // Check against environment variable
-        if (password !== process.env.ADMIN_PASSWORD) {
+        // Check against environment variable with fallback
+        const adminPassword = process.env.ADMIN_PASSWORD || FALLBACK_ADMIN_PASSWORD;
+        if (password !== adminPassword) {
             return NextResponse.json(
                 { error: 'Invalid credentials' },
                 { status: 401 }
