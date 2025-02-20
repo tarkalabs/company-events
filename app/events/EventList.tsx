@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Event } from '../types';
-import FeedbackForm from '../components/FeedbackForm';
 import React from 'react';
 
 function StarRating({ rating, onRate }: { rating: number; onRate: (r: number) => void }) {
@@ -71,8 +70,8 @@ const EventCard = React.memo(({ event, feedback, isEditing, onSubmit, onEdit }: 
                 onClick={() => onSubmit(tempRating, tempComments)}
                 disabled={tempRating === 0}
                 className={`w-full sm:w-auto px-4 py-2 text-white rounded-lg transition-colors ${tempRating === 0
-                    ? 'bg-blue-600/50 cursor-not-allowed'
-                    : 'bg-blue-600 hover:bg-blue-700'
+                  ? 'bg-blue-600/50 cursor-not-allowed'
+                  : 'bg-blue-600 hover:bg-blue-700'
                   }`}
               >
                 Save
@@ -276,7 +275,7 @@ export default function EventList() {
               feedback={feedbacks[event.id!]}
               isEditing={editingEvent === event.id}
               onSubmit={(rating, comments) => handleSubmitFeedback(event.id!, rating, comments)}
-              onEdit={() => setEditingEvent(editingEvent === event.id ? null : event.id)}
+              onEdit={() => setEditingEvent(editingEvent === event.id ? null : (event.id || null))}
             />
           ))}
         </div>
@@ -293,7 +292,7 @@ export default function EventList() {
               feedback={feedbacks[event.id!]}
               isEditing={editingEvent === event.id}
               onSubmit={(rating, comments) => handleSubmitFeedback(event.id!, rating, comments)}
-              onEdit={() => setEditingEvent(editingEvent === event.id ? null : event.id)}
+              onEdit={() => setEditingEvent(editingEvent === event.id ? null : (event.id || null))}
             />
           ))}
         </div>

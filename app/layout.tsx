@@ -1,16 +1,11 @@
 import './globals.css'
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from 'next/font/google'
 import ClientLayout from './components/ClientLayout';
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
 });
 
 // Metadata needs to be in a separate server component
@@ -30,7 +25,7 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
         <meta name="theme-color" content="#1a1a1a" />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${inter.variable} font-sans antialiased`}>
         <div className="min-h-screen">
           <ClientLayout>{children}</ClientLayout>
         </div>
