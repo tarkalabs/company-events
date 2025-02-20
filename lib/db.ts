@@ -9,7 +9,7 @@ prisma.$connect()
     .then(() => console.log('Successfully connected to the database'))
     .catch((e) => console.error('Failed to connect to the database:', e));
 
-interface Event {
+export interface Event {
     id?: string;
     Day: number;
     Time: string;
@@ -17,7 +17,7 @@ interface Event {
     Details: string | null;
 }
 
-interface EventFeedback {
+export interface EventFeedback {
     eventId: string;
     userId: string;
     rating: number;

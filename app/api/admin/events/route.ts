@@ -8,6 +8,6 @@ export async function GET() {
     const events = await prisma.event.findMany();
     return NextResponse.json(events);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch events' }, { status: 500 });
+    return NextResponse.json({ error: error }, { status: 500 });
   }
 } 

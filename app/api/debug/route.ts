@@ -5,9 +5,9 @@ export async function GET() {
     try {
         const state = await checkDatabaseState();
         return NextResponse.json(state);
-    } catch (error) {
+    } catch (_error) {
         return NextResponse.json(
-            { error: 'Failed to check database state' },
+            { error: _error },
             { status: 500 }
         );
     }

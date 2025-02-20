@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Event } from '../types';
-import FeedbackForm from '../components/FeedbackForm';
+import { Event } from '@/app/types';
 import React from 'react';
 
 function StarRating({ rating, onRate }: { rating: number; onRate: (r: number) => void }) {
@@ -276,7 +275,7 @@ export default function EventList() {
               feedback={feedbacks[event.id!]}
               isEditing={editingEvent === event.id}
               onSubmit={(rating, comments) => handleSubmitFeedback(event.id!, rating, comments)}
-              onEdit={() => setEditingEvent(editingEvent === event.id ? null : event.id)}
+              onEdit={() => setEditingEvent(editingEvent === event.id ? null : (event.id || null))}
             />
           ))}
         </div>
@@ -293,7 +292,7 @@ export default function EventList() {
               feedback={feedbacks[event.id!]}
               isEditing={editingEvent === event.id}
               onSubmit={(rating, comments) => handleSubmitFeedback(event.id!, rating, comments)}
-              onEdit={() => setEditingEvent(editingEvent === event.id ? null : event.id)}
+              onEdit={() => setEditingEvent(editingEvent === event.id ? null : (event.id || null))}
             />
           ))}
         </div>

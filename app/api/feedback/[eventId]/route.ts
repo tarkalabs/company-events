@@ -15,7 +15,7 @@ export async function GET(
         return NextResponse.json(feedback);
     } catch (error) {
         return NextResponse.json(
-            { error: 'Failed to fetch feedback' },
+            { error: error instanceof Error ? error.message : 'An error occurred' },
             { status: 500 }
         );
     }
@@ -33,33 +33,25 @@ export async function POST(
 
         const { rating, comments } = await request.json();
 
-        if (typeof rating !== 'number' || rating === 0) {
+        if (typeof rating !== 'number' || rating <= 0) {
             return NextResponse.json(
                 { error: 'Rating is required and must be greater than 0' },
                 { status: 400 }
             );
         }
 
-        console.log('Received feedback submission:', {
-            eventId: params.eventId,
-            userId,
-            rating,
-            comments
-        });
-
         const feedback = await submitFeedback({
             eventId: params.eventId,
             userId,
             rating,
-            comments: comments || ''
+            comments: comments || '',
         });
 
         return NextResponse.json(feedback);
     } catch (error) {
-        console.error('Feedback submission error:', error);
         return NextResponse.json(
-            { error: 'Failed to submit feedback' },
+            { error: error instanceof Error ? error.message : 'An error occurred' },
             { status: 500 }
         );
     }
-} 
+}

@@ -48,6 +48,7 @@ export default function LoginPage() {
       // Navigate to database page
       router.push('/database');
     } catch (error) {
+      console.error('Login error:', error);
       alert('Invalid admin credentials');
     }
   };
