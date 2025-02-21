@@ -1,14 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-
-interface Event {
-  id: string;
-  day: number;
-  time: string;
-  session: string;
-  details: string | null;
-}
+import type { Event } from '@/app/types';
 
 export default function AdminPage() {
   const [events, setEvents] = useState<Event[]>([]);

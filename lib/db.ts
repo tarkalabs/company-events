@@ -1,48 +1,158 @@
-import { PrismaClient } from '@prisma/client';
+import {
+    collection,
+    doc,
+    getDocs,
+    getDoc,
+    query,
+    where,
+    addDoc,
+    orderBy,
+    setDoc
+} from 'firebase/firestore';
+import { db } from './firebase/config';
+import { Event, Feedback } from '@/app/types';
 
-const prisma = new PrismaClient({
-    log: ['query', 'error', 'warn'],
-});
+// User-related functions
+export async function getUser(username: string) {
+    try {
+        const usersRef = collection(db, 'users');
+        const q = query(usersRef, where('username', '==', username));
+        const querySnapshot = await getDocs(q);
 
-// Add this to test the connection
-prisma.$connect()
-    .then(() => console.log('Successfully connected to the database'))
-    .catch((e) => console.error('Failed to connect to the database:', e));
+        if (querySnapshot.empty) return null;
 
-export interface Event {
-    id?: string;
-    Day: number;
-    Time: string;
-    Session: string;
-    Details: string | null;
+        const userDoc = querySnapshot.docs[0];
+        return {
+            id: userDoc.id,
+            ...userDoc.data()
+        };
+    } catch (error) {
+        console.error('Error getting user:', error);
+        throw error;
+    }
 }
 
-export interface EventFeedback {
-    eventId: string;
-    userId: string;
-    rating: number;
-    comments: string;
+export async function createUser(username: string, businessUnit: string) {
+    try {
+        const usersRef = collection(db, 'users');
+        const userDoc = await addDoc(usersRef, {
+            username,
+            businessUnit,
+            createdAt: new Date()
+        });
+
+        return {
+            id: userDoc.id,
+            username,
+            businessUnit
+        };
+    } catch (error) {
+        console.error('Error creating user:', error);
+        throw error;
+    }
 }
 
-export async function getEvents() {
-    const events = await prisma.event.findMany({
-        orderBy: [
-            { day: 'asc' },
-            { time: 'asc' }
-        ],
-        include: {
-            feedbacks: true
+// Event-related functions
+export async function getEvents(): Promise<Event[]> {
+    try {
+        const eventsRef = collection(db, 'events');
+        const snapshot = await getDocs(eventsRef);
+
+        if (snapshot.empty) {
+            await initializeDefaultEvents();
+            const newSnapshot = await getDocs(eventsRef);
+            return newSnapshot.docs.map(doc => {
+                const data = doc.data();
+                return {
+                    id: doc.id,
+                    day: data.day,
+                    time: data.time,
+                    session: data.session,
+                    details: data.details
+                };
+            });
+        }
+
+        return snapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                day: data.day,
+                time: data.time,
+                session: data.session,
+                details: data.details
+            };
+        });
+    } catch (error) {
+        console.error('Error getting events:', error);
+        throw error;
+    }
+}
+
+// Add this function after the getEvents function
+async function initializeDefaultEvents() {
+    const defaultEvents = [
+        {
+            day: 1,
+            time: "09:00 AM",
+            session: "Opening Keynote",
+            details: "Welcome address and company vision for 2024"
         },
-    });
+        {
+            day: 1,
+            time: "11:00 AM",
+            session: "Technical Workshop",
+            details: "Hands-on session with new technologies"
+        },
+        {
+            day: 1,
+            time: "02:00 PM",
+            session: "Team Building",
+            details: "Interactive team building activities"
+        },
+        {
+            day: 2,
+            time: "09:30 AM",
+            session: "Product Roadmap",
+            details: "Upcoming features and product strategy"
+        },
+        {
+            day: 2,
+            time: "11:30 AM",
+            session: "Innovation Lab",
+            details: "Exploring emerging technologies"
+        },
+        {
+            day: 2,
+            time: "02:30 PM",
+            session: "Closing Session",
+            details: "Wrap up and future plans"
+        }
+    ];
 
-    // Transform the data to match the expected format
-    return events.map(event => ({
-        id: event.id,
-        Day: event.day,
-        Time: event.time,
-        Session: event.session,
-        Details: event.details
-    }));
+    const eventsRef = collection(db, 'events');
+
+    for (const event of defaultEvents) {
+        await addDoc(eventsRef, event);
+    }
+}
+
+// Feedback-related functions
+export async function getEventFeedback(eventId: string, userId: string) {
+    try {
+        const feedbackRef = doc(db, 'feedbacks', `${eventId}-${userId}`);
+        const feedbackDoc = await getDoc(feedbackRef);
+
+        if (!feedbackDoc.exists()) return null;
+
+        return {
+            id: feedbackDoc.id,
+            ...feedbackDoc.data()
+        };
+    } catch (error) {
+        console.error('Error getting feedback:', error);
+        throw error;
+    }
 }
 
 export async function submitFeedback(feedback: {
@@ -52,95 +162,50 @@ export async function submitFeedback(feedback: {
     comments: string;
 }) {
     try {
-        console.log('Submitting feedback:', feedback);
-        const result = await prisma.feedback.upsert({
-            where: {
-                eventId_userId: {
-                    eventId: feedback.eventId,
-                    userId: feedback.userId,
-                }
-            },
-            update: {
-                rating: feedback.rating,
-                comments: feedback.comments,
-            },
-            create: feedback,
+        const feedbackRef = doc(db, 'feedbacks', `${feedback.eventId}-${feedback.userId}`);
+        await setDoc(feedbackRef, {
+            ...feedback,
+            updatedAt: new Date()
         });
-        console.log('Feedback submitted successfully:', result);
-        return result;
+
+        return {
+            id: feedbackRef.id,
+            ...feedback
+        };
     } catch (error) {
         console.error('Error submitting feedback:', error);
         throw error;
     }
 }
 
-export async function getEventFeedback(eventId: string, userId: string) {
-    return prisma.feedback.findFirst({
-        where: {
-            eventId,
-            userId,
-        },
-    });
-}
-
-export async function createUser(username: string, businessUnit: string) {
-    try {
-        console.log('Creating user with data:', { username, businessUnit });
-        const user = await prisma.user.create({
-            data: {
-                username,
-                businessUnit,
-            },
-        });
-        console.log('User created in database:', user);
-        return user;
-    } catch (error) {
-        console.error('Error creating user:', error);
-        throw error;
-    }
-}
-
-export async function getUser(username: string) {
-    try {
-        console.log('Looking up user:', username);
-        const user = await prisma.user.findUnique({
-            where: { username },
-        });
-        console.log('User lookup result:', user);
-        return user;
-    } catch (error) {
-        console.error('Error finding user:', error);
-        throw error;
-    }
-}
-
 export async function getAllFeedbacks() {
-    return prisma.feedback.findMany({
-        include: {
-            event: true,
-            user: true,
-        },
-    });
+    try {
+        const feedbacksRef = collection(db, 'feedbacks');
+        const querySnapshot = await getDocs(feedbacksRef);
+
+        return querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+    } catch (error) {
+        console.error('Error getting all feedbacks:', error);
+        throw error;
+    }
 }
 
 export async function checkDatabaseState() {
     try {
-        const users = await prisma.user.findMany();
-        const events = await prisma.event.findMany();
-        const feedbacks = await prisma.feedback.findMany();
+        const collections = ['users', 'events', 'feedbacks'];
+        const state: Record<string, number> = {};
 
-        console.log('Database State:');
-        console.log('Users:', users);
-        console.log('Events:', events);
-        console.log('Feedbacks:', feedbacks);
+        for (const collectionName of collections) {
+            const querySnapshot = await getDocs(collection(db, collectionName));
+            state[collectionName] = querySnapshot.size;
+        }
 
-        return {
-            users,
-            events,
-            feedbacks
-        };
+        return state;
     } catch (error) {
         console.error('Error checking database state:', error);
         throw error;
     }
-} 
+}

@@ -1,160 +1,74 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
-  const [businessUnit, setBusinessUnit] = useState('');
+  const [error, setError] = useState('');
   const router = useRouter();
 
-  // Add state for admin login
-  const [showAdminPrompt, setShowAdminPrompt] = useState(false);
-  const [adminUsername, setAdminUsername] = useState('');
-  const [adminPassword, setAdminPassword] = useState('');
+  useEffect(() => {
+    // Clear any existing auth state on login page load
+    localStorage.removeItem('user');
+    document.cookie = 'user=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
+  }, []);
 
-  const handleAdminLogin = async () => {
-    if (!adminUsername) {
-      alert('Username is required');
-      return;
-    }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
 
     try {
-      const response = await fetch('/api/auth/admin', {
+      const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          username: adminUsername,
-          password: adminPassword
-        }),
+        body: JSON.stringify({ username }),
+        credentials: 'include',
       });
-
-      if (!response.ok) {
-        throw new Error('Invalid admin credentials');
-      }
-
-      // Store admin user data
-      localStorage.setItem('user', JSON.stringify({
-        id: 'admin',
-        username: adminUsername,
-        businessUnit: 'Admin'
-      }));
-
-      // Set admin cookie
-      document.cookie = `user=admin; path=/`;
-
-      // Navigate to database page
-      router.push('/database');
-    } catch (error) {
-      console.error('Login error:', error);
-      alert('Invalid admin credentials');
-    }
-  };
-
-  const handleLogin = async () => {
-    console.log('Attempting to login with:', { username, businessUnit }); // Debug log
-    try {
-      const response = await fetch('/api/auth', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, businessUnit }),
-      });
-
-      console.log('Response status:', response.status); // Log response status
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Login failed:', errorData); // Log error details
-        throw new Error('Failed to login');
-      }
 
       const data = await response.json();
-      console.log('User logged in:', data);
 
-      // Store user data in localStorage
-      localStorage.setItem('user', JSON.stringify(data));
-
-      // Set the user cookie
-      document.cookie = `user=${data.id}; path=/`;
-
-      // Navigate to events page
-      router.push('/events');
+      if (response.ok) {
+        localStorage.setItem('user', JSON.stringify(data.user));
+        router.push('/events');
+        router.refresh();
+      } else {
+        setError(data.error || 'Login failed');
+      }
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Error during login:', error);
+      setError('An error occurred during login');
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
-      <div className="bg-white/10 backdrop-blur-lg border border-white/20 p-6 rounded-xl shadow-lg max-w-md w-full">
-        <h2 className="text-2xl font-bold text-white mb-4 text-center">Login</h2>
-
-        {showAdminPrompt ? (
-          // Admin login form
-          <div className="space-y-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-900">
+      <div className="bg-white/10 backdrop-blur-lg p-8 rounded-xl shadow-lg w-96">
+        <h1 className="text-2xl font-bold text-white mb-6 text-center">Welcome to Company Events</h1>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="username" className="block text-sm font-medium text-white mb-2">
+              Username
+            </label>
             <input
               type="text"
-              value={adminUsername}
-              onChange={(e) => setAdminUsername(e.target.value)}
-              className="w-full p-2 rounded bg-white/10 text-white text-sm sm:text-base"
-              placeholder="Admin Username"
-            />
-            <input
-              type="password"
-              value={adminPassword}
-              onChange={(e) => setAdminPassword(e.target.value)}
-              className="w-full p-2 rounded bg-white/10 text-white text-sm sm:text-base"
-              placeholder="Admin Password"
-            />
-            <div className="flex gap-2">
-              <button
-                onClick={handleAdminLogin}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Login as Admin
-              </button>
-              <button
-                onClick={() => setShowAdminPrompt(false)}
-                className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        ) : (
-          // Regular user login form
-          <div className="space-y-4">
-            <input
-              type="text"
+              id="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full p-2 rounded bg-white/10 text-white text-sm sm:text-base"
-              placeholder="Username"
+              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white"
+              placeholder="Enter your username"
+              required
             />
-            <input
-              type="text"
-              value={businessUnit}
-              onChange={(e) => setBusinessUnit(e.target.value)}
-              className="w-full p-2 rounded bg-white/10 text-white text-sm sm:text-base"
-              placeholder="Business Unit"
-            />
-            <button
-              onClick={handleLogin}
-              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Login
-            </button>
-            <button
-              onClick={() => setShowAdminPrompt(true)}
-              className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-            >
-              Admin Login
-            </button>
           </div>
-        )}
+          <button
+            type="submit"
+            className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Enter
+          </button>
+        </form>
       </div>
     </div>
   );

@@ -1,26 +1,15 @@
 import { createUser, getUser } from '@/lib/db';
 import { NextResponse } from 'next/server';
+import type { User } from '@/app/types';
 
 export async function POST(request: Request) {
   try {
-    const { username, businessUnit } = await request.json();
+    const { username } = await request.json();
 
-    if (!username || !businessUnit) {
-      return NextResponse.json(
-        { error: 'Username and business unit are required' },
-        { status: 400 }
-      );
-    }
-
-    console.log('Attempting to authenticate:', { username, businessUnit });
-
-    let user = await getUser(username);
-    console.log('Existing user:', user);
+    let user = await getUser(username) as User | null;
 
     if (!user) {
-      console.log('Creating new user...');
-      user = await createUser(username, businessUnit);
-      console.log('New user created:', user);
+      user = await createUser(username, 'default') as User;
     }
 
     if (!user) {
@@ -30,12 +19,26 @@ export async function POST(request: Request) {
       );
     }
 
-    console.log('Sending user response:', user);
-    return NextResponse.json({
+    const userResponse: User = {
       id: user.id,
       username: user.username,
       businessUnit: user.businessUnit
+    };
+
+    const response = NextResponse.json({
+      success: true,
+      user: userResponse
     });
+
+    // Set auth cookie
+    response.cookies.set('auth', JSON.stringify(userResponse), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7 // 1 week
+    });
+
+    return response;
   } catch (error) {
     console.error('Auth error:', error);
     return NextResponse.json(

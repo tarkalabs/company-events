@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 
-const FALLBACK_ADMIN_PASSWORD = "0;?BYA5MIEKFo<~p";
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
 
 export async function POST(request: Request) {
     try {
@@ -13,18 +15,22 @@ export async function POST(request: Request) {
             );
         }
 
-        // Check against environment variable with fallback
-        const adminPassword = process.env.ADMIN_PASSWORD || FALLBACK_ADMIN_PASSWORD;
-        if (password !== adminPassword) {
+        if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
             return NextResponse.json(
                 { error: 'Invalid credentials' },
                 { status: 401 }
             );
         }
 
-        return NextResponse.json({
-            success: true
+        // Set admin cookie
+        cookies().set('isAdmin', 'true', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 60 * 60 * 24 // 24 hours
         });
+
+        return NextResponse.json({ success: true });
     } catch (error) {
         console.error('Admin auth error:', error);
         return NextResponse.json(

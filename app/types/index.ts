@@ -1,14 +1,15 @@
 export interface User {
+  id: string;
   username: string;
   businessUnit: string;
 }
 
 export interface Event {
-  id?: string;
-  Day: number;
-  Time: string;
-  Session: string;
-  Details: string | null;
+  id: string;
+  day: number;
+  time: string;
+  session: string;
+  details?: string;
 }
 
 export interface EventFeedback {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Event } from '@/app/types';
+import type { Event } from '@/app/types';
 import React from 'react';
 
 function StarRating({ rating, onRate }: { rating: number; onRate: (r: number) => void }) {
@@ -42,13 +42,13 @@ const EventCard = React.memo(({ event, feedback, isEditing, onSubmit, onEdit }: 
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 sm:gap-4 mb-4">
         <div className="flex-1">
           <div className="flex items-start justify-between">
-            <h3 className="text-lg sm:text-xl font-bold text-white pr-2">{event.Session}</h3>
+            <h3 className="text-lg sm:text-xl font-bold text-white pr-2">{event.session}</h3>
             <span className="px-2 py-1 bg-blue-600/30 text-white rounded-full text-sm whitespace-nowrap">
-              {event.Time}
+              {event.time}
             </span>
           </div>
-          {event.Details && (
-            <p className="text-white/80 mt-2 text-sm sm:text-base">{event.Details}</p>
+          {event.details && (
+            <p className="text-white/80 mt-2 text-sm sm:text-base">{event.details}</p>
           )}
         </div>
       </div>
@@ -121,17 +121,14 @@ export default function EventList() {
   const [loading, setLoading] = useState(true);
   const [feedbacks, setFeedbacks] = useState<Record<string, { rating: number; comments: string }>>({});
   const [editingEvent, setEditingEvent] = useState<string | null>(null);
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
 
   // Memoize the filtered events
-  const day1Events = useMemo(() =>
-    events.filter(event => event.Day === 1),
-    [events]
-  );
+  const filteredEvents = selectedDay
+    ? events.filter(event => event.day === selectedDay)
+    : events;
 
-  const day2Events = useMemo(() =>
-    events.filter(event => event.Day === 2),
-    [events]
-  );
+  const uniqueDays = [...new Set(events.map(event => event.day))].sort((a, b) => a - b);
 
   const handleSubmitFeedback = async (eventId: string, rating: number, comments: string) => {
     try {
@@ -193,7 +190,7 @@ export default function EventList() {
         if (mounted) {
           const eventsWithIds = data.map((event: Event) => ({
             ...event,
-            id: event.id || `${event.Day}-${event.Time}`
+            id: event.id || `${event.day}-${event.time}`
           }));
           setEvents(eventsWithIds);
 
@@ -264,38 +261,33 @@ export default function EventList() {
 
   return (
     <div className="space-y-6 p-4 sm:p-6 max-w-4xl mx-auto">
-      {/* Day 1 Events */}
-      <div>
-        <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4 sm:mb-6">Day 1</h2>
-        <div className="space-y-4">
-          {day1Events.map((event) => (
-            <EventCard
-              key={event.id}
-              event={event}
-              feedback={feedbacks[event.id!]}
-              isEditing={editingEvent === event.id}
-              onSubmit={(rating, comments) => handleSubmitFeedback(event.id!, rating, comments)}
-              onEdit={() => setEditingEvent(editingEvent === event.id ? null : (event.id || null))}
-            />
-          ))}
-        </div>
+      <div className="flex gap-2">
+        {uniqueDays.map(day => (
+          <button
+            key={day}
+            onClick={() => setSelectedDay(selectedDay === day ? null : day)}
+            className={`px-4 py-2 rounded-lg transition-colors ${
+              selectedDay === day
+                ? 'bg-blue-600 text-white'
+                : 'bg-white/10 text-white hover:bg-white/20'
+            }`}
+          >
+            Day {day}
+          </button>
+        ))}
       </div>
 
-      {/* Day 2 Events */}
-      <div>
-        <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4 sm:mb-6">Day 2</h2>
-        <div className="space-y-4">
-          {day2Events.map((event) => (
-            <EventCard
-              key={event.id}
-              event={event}
-              feedback={feedbacks[event.id!]}
-              isEditing={editingEvent === event.id}
-              onSubmit={(rating, comments) => handleSubmitFeedback(event.id!, rating, comments)}
-              onEdit={() => setEditingEvent(editingEvent === event.id ? null : (event.id || null))}
-            />
-          ))}
-        </div>
+      <div className="space-y-4">
+        {filteredEvents.map((event) => (
+          <EventCard
+            key={event.id}
+            event={event}
+            feedback={feedbacks[event.id!]}
+            isEditing={editingEvent === event.id}
+            onSubmit={(rating, comments) => handleSubmitFeedback(event.id!, rating, comments)}
+            onEdit={() => setEditingEvent(editingEvent === event.id ? null : (event.id || null))}
+          />
+        ))}
       </div>
     </div>
   );

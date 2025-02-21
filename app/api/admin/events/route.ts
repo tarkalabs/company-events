@@ -1,13 +1,22 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { db } from '@/lib/firebase/config';
+import { collection, getDocs } from 'firebase/firestore';
 
 export async function GET() {
   try {
-    const events = await prisma.event.findMany();
+    const eventsRef = collection(db, 'events');
+    const snapshot = await getDocs(eventsRef);
+    const events = snapshot.docs.map(doc => ({
+      id: doc.id,
+      day: doc.data().day,
+      time: doc.data().time,
+      session: doc.data().session,
+      details: doc.data().details
+    }));
+
     return NextResponse.json(events);
   } catch (error) {
-    return NextResponse.json({ error: error }, { status: 500 });
+    console.error('Error fetching events:', error);
+    return NextResponse.json({ error: 'Failed to fetch events' }, { status: 500 });
   }
 } 

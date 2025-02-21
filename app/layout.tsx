@@ -1,17 +1,9 @@
 import './globals.css'
 import type { Metadata } from 'next'
-import { Inter, Roboto_Mono } from 'next/font/google';
-import ClientLayout from './components/ClientLayout';
+import { Inter } from 'next/font/google'
+import ClientLayout from './components/ClientLayout'
 
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
-});
-
-const robotoMono = Roboto_Mono({
-  subsets: ['latin'],
-  variable: '--font-roboto-mono',
-});
+const inter = Inter({ subsets: ['latin'] })
 
 // Metadata needs to be in a separate server component
 export const metadata: Metadata = {
@@ -25,15 +17,9 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${robotoMono.variable}`}>
-      <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
-        <meta name="theme-color" content="#1a1a1a" />
-      </head>
-      <body className="antialiased">
-        <div className="min-h-screen">
-          <ClientLayout>{children}</ClientLayout>
-        </div>
+    <html lang="en">
+      <body className={`${inter.className} bg-gray-900`}>
+        <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
   )

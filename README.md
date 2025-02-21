@@ -1,6 +1,6 @@
 # Company Events Feedback Application
 
-A Next.js application for managing and collecting feedback for company events. Built with React, TypeScript, Prisma, and SQLite.
+A Next.js application for managing and collecting feedback for company events. Built with React and TypeScript.
 
 ## Features
 
@@ -8,14 +8,12 @@ A Next.js application for managing and collecting feedback for company events. B
 - ⭐ Submit and edit feedback for each event
 - 👤 User authentication
 - 📱 Responsive design for mobile and desktop
-- 💾 Persistent data storage with SQLite
 - 🔄 Real-time feedback updates
 
 ## Tech Stack
 
-- **Frontend**: Next.js 15.1.7, React 19
+- **Frontend**: Next.js 14.1.0, React 18
 - **Backend**: Next.js API Routes
-- **Database**: SQLite with Prisma ORM
 - **Styling**: Tailwind CSS
 - **Language**: TypeScript
 

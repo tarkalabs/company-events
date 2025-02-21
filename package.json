@@ -6,12 +6,13 @@
     "dev": "next dev",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "prisma generate",
-    "build": "prisma generate && next build"
+    "build": "next build",
+    "init-db": "ts-node scripts/initFirebase.ts"
   },
   "dependencies": {
-    "@prisma/client": "^6.4.0",
     "autoprefixer": "^10.4.20",
+    "firebase": "^9.23.0",
+    "firebase-admin": "^12.0.0",
     "next": "14.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
@@ -20,14 +21,12 @@
     "@types/node": "^20",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
+    "dotenv": "^16.4.7",
     "eslint-config-next": "14.1.0",
     "postcss": "^8.5.3",
-    "prisma": "^6.4.0",
     "tailwindcss": "^3.4.17",
     "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
     "typescript": "^5"
-  },
-  "prisma": {
-    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
   }
 }

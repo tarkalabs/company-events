@@ -41,10 +41,10 @@ export default function UserProfile() {
         .toUpperCase();
 
     const handleLogout = () => {
-        // Clear user data
         localStorage.removeItem('user');
         document.cookie = 'user=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
         router.push('/login');
+        router.refresh();
     };
 
     return (
