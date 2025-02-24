@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '@/lib/firebase/config';
 
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
+// Simplify admin credentials
+const ADMIN_USERNAME = 'admin@example.com';
+const ADMIN_PASSWORD = 'admin123';
 
 export async function POST(request: Request) {
     try {
@@ -15,22 +17,18 @@ export async function POST(request: Request) {
             );
         }
 
+        // Compare with hardcoded values for now
         if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
             return NextResponse.json(
                 { error: 'Invalid credentials' },
                 { status: 401 }
             );
         }
-
-        // Set admin cookie
-        cookies().set('isAdmin', 'true', {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            maxAge: 60 * 60 * 24 // 24 hours
+        
+        return NextResponse.json({ 
+            success: true,
+            admin: { username: ADMIN_USERNAME }
         });
-
-        return NextResponse.json({ success: true });
     } catch (error) {
         console.error('Admin auth error:', error);
         return NextResponse.json(

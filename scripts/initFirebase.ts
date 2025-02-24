@@ -41,7 +41,7 @@ async function clearExistingEvents() {
 async function initializeEvents() {
     try {
         await clearExistingEvents();
-        
+
         const events = [
             {
                 day: 1,
@@ -83,12 +83,12 @@ async function initializeEvents() {
 
         const eventsRef = collection(db, 'events');
         console.log('Adding new events...');
-        
+
         for (const event of events) {
             const docRef = await addDoc(eventsRef, event);
             console.log('Added event:', { id: docRef.id, ...event });
         }
-        
+
         console.log('Events initialized successfully');
     } catch (error) {
         console.error('Error during initialization:', error);

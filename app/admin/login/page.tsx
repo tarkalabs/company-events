@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function AdminLoginPage() {
@@ -8,6 +8,13 @@ export default function AdminLoginPage() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const router = useRouter();
+
+    useEffect(() => {
+        const admin = localStorage.getItem('admin');
+        if (admin) {
+            router.push('/admin');
+        }
+    }, [router]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -20,14 +27,13 @@ export default function AdminLoginPage() {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ username, password }),
-                credentials: 'include',
             });
 
             const data = await response.json();
 
             if (response.ok && data.success) {
+                localStorage.setItem('admin', JSON.stringify(data.admin));
                 router.push('/admin');
-                router.refresh();
             } else {
                 setError(data.error || 'Invalid credentials');
             }

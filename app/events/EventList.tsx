@@ -138,7 +138,12 @@ export default function EventList() {
         return;
       }
 
-      console.log('Submitting feedback:', { eventId, rating, comments, userId: user.id });
+      console.log('[EventList] Submitting feedback:', { 
+        eventId, 
+        rating, 
+        comments, 
+        userId: user.id 
+      });
 
       const response = await fetch(`/api/feedback/${eventId}`, {
         method: 'POST',
@@ -152,13 +157,8 @@ export default function EventList() {
         })
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to submit feedback');
-      }
-
       const newFeedback = await response.json();
-      console.log('Feedback submitted successfully:', newFeedback);
+      console.log('[EventList] Feedback submission response:', newFeedback);
 
       // Update local state with new feedback
       setFeedbacks(prev => ({

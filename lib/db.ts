@@ -180,13 +180,50 @@ export async function submitFeedback(feedback: {
 
 export async function getAllFeedbacks() {
     try {
+        console.log('[db] Fetching all feedbacks');
         const feedbacksRef = collection(db, 'feedbacks');
-        const querySnapshot = await getDocs(feedbacksRef);
+        const snapshot = await getDocs(feedbacksRef);
+        console.log('[db] Raw feedback docs:', snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
-        return querySnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        }));
+        // Get all events first
+        const eventsRef = collection(db, 'events');
+        const eventsSnapshot = await getDocs(eventsRef);
+        const eventsMap = new Map<string, Event>(
+            eventsSnapshot.docs.map(doc => [
+                doc.id,
+                {
+                    id: doc.id,
+                    day: doc.data().day,
+                    time: doc.data().time,
+                    session: doc.data().session,
+                    details: doc.data().details
+                }
+            ])
+        );
+        console.log('[db] Events map:', Object.fromEntries(eventsMap));
+
+        const feedbacks = snapshot.docs.map(doc => {
+            const data = doc.data();
+            const event = eventsMap.get(data.eventId);
+
+            return {
+                id: doc.id,
+                eventId: data.eventId,
+                userId: data.userId,
+                rating: data.rating,
+                comments: data.comments,
+                createdAt: data.updatedAt?.toDate?.() || null,
+                event: {
+                    session: event?.session || 'Unknown Session'
+                },
+                user: {
+                    username: data.userId
+                }
+            };
+        });
+
+        console.log('[db] Processed feedbacks:', feedbacks);
+        return feedbacks;
     } catch (error) {
         console.error('Error getting all feedbacks:', error);
         throw error;

@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   env: {
     ADMIN_PASSWORD: process.env.ADMIN_PASSWORD,
+    ADMIN_EMAIL: process.env.ADMIN_EMAIL,
   },
   webpack: (config, { isServer }) => {
     if (isServer) {

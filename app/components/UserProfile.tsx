@@ -40,11 +40,14 @@ export default function UserProfile() {
         .join('')
         .toUpperCase();
 
-    const handleLogout = () => {
-        localStorage.removeItem('user');
-        document.cookie = 'user=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
-        router.push('/login');
-        router.refresh();
+    const handleLogout = async () => {
+        try {
+            localStorage.removeItem('user');
+            router.push('/login');
+            router.refresh();
+        } catch (error) {
+            console.error('Error during logout:', error);
+        }
     };
 
     return (

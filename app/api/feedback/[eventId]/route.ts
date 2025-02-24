@@ -26,31 +26,30 @@ export async function POST(
     { params }: { params: { eventId: string } }
 ) {
     try {
-        const userId = request.headers.get('X-User-Id');
-        if (!userId) {
-            return NextResponse.json({ error: 'User ID required' }, { status: 400 });
-        }
-
+        const { eventId } = params;
         const { rating, comments } = await request.json();
+        const userId = request.headers.get('X-User-Id');
 
-        if (typeof rating !== 'number' || rating <= 0) {
-            return NextResponse.json(
-                { error: 'Rating is required and must be greater than 0' },
-                { status: 400 }
-            );
+        if (!userId) {
+            return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
         }
 
         const feedback = await submitFeedback({
-            eventId: params.eventId,
+            eventId,
             userId,
             rating,
-            comments: comments || '',
+            comments
         });
 
-        return NextResponse.json(feedback);
+        return NextResponse.json({ 
+            success: true, 
+            rating: feedback.rating, 
+            comments: feedback.comments 
+        });
     } catch (error) {
+        console.error('Error saving feedback:', error);
         return NextResponse.json(
-            { error: error instanceof Error ? error.message : 'An error occurred' },
+            { error: 'Failed to save feedback' },
             { status: 500 }
         );
     }
