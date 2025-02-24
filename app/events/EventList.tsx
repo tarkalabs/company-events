@@ -180,74 +180,84 @@ export default function EventList() {
     let mounted = true;
 
     async function fetchEvents() {
-      try {
-        const response = await fetch('/api/events');
-        if (!response.ok) {
-          throw new Error('Failed to fetch events');
-        }
-        const data = await response.json();
-
-        if (mounted) {
-          const eventsWithIds = data.map((event: Event) => ({
-            ...event,
-            id: event.id || `${event.day}-${event.time}`
-          }));
-          setEvents(eventsWithIds);
-
-          // Fetch feedback for each event
-          const user = JSON.parse(localStorage.getItem('user') || '{}');
-          if (!user.id) {
-            console.error('No user found in localStorage');
-            return;
-          }
-
-          // Use Promise.all to fetch all feedbacks in parallel
-          const feedbackPromises = eventsWithIds.map(async (event: Event) => {
-            try {
-              const response = await fetch(`/api/feedback/${event.id}`, {
-                headers: {
-                  'X-User-Id': user.id
-                }
-              });
-              if (!response.ok) return null;
-              return response.json();
-            } catch (error) {
-              console.error(`Error fetching feedback for event ${event.id}:`, error);
-              return null;
+        try {
+            console.log('Fetching events...');
+            const response = await fetch('/api/events');
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
-          });
+            
+            const data = await response.json();
+            console.log('Received events:', data);
 
-          const feedbackResults = await Promise.all(feedbackPromises);
+            if (!mounted) return;
 
-          if (mounted) {
+            if (!Array.isArray(data)) {
+                console.error('Received invalid data format:', data);
+                setLoading(false);
+                return;
+            }
+
+            const eventsWithIds = data.map((event: Event) => ({
+                ...event,
+                id: event.id || `${event.day}-${event.time}`
+            }));
+            
+            setEvents(eventsWithIds);
+            setLoading(false);
+
+            // Fetch feedback for each event
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (!user.id) {
+                console.error('No user found in localStorage');
+                return;
+            }
+
+            const feedbackPromises = eventsWithIds.map(async (event: Event) => {
+                try {
+                    const response = await fetch(`/api/feedback/${event.id}`, {
+                        headers: {
+                            'X-User-Id': user.id
+                        }
+                    });
+                    if (!response.ok) return null;
+                    return response.json();
+                } catch (error) {
+                    console.error(`Error fetching feedback for event ${event.id}:`, error);
+                    return null;
+                }
+            });
+
+            if (!mounted) return;
+
+            const feedbackResults = await Promise.all(feedbackPromises);
             const newFeedbacks = feedbackResults.reduce((acc, feedback, index) => {
-              if (feedback) {
-                acc[eventsWithIds[index].id!] = {
-                  rating: feedback.rating,
-                  comments: feedback.comments
-                };
-              }
-              return acc;
+                if (feedback) {
+                    acc[eventsWithIds[index].id!] = {
+                        rating: feedback.rating,
+                        comments: feedback.comments
+                    };
+                }
+                return acc;
             }, {});
 
             setFeedbacks(newFeedbacks);
-          }
+        } catch (error) {
+            console.error('Error fetching events:', error);
+        } finally {
+            if (mounted) {
+                setLoading(false);
+            }
         }
-      } catch (error) {
-        console.error('Error fetching events:', error);
-      } finally {
-        if (mounted) {
-          setLoading(false);
-        }
-      }
     }
 
     fetchEvents();
 
     return () => {
-      mounted = false;
+        mounted = false;
     };
-  }, []);
+}, []);
 
   if (loading) {
     return (

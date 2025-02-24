@@ -53,35 +53,43 @@ export async function createUser(username: string, businessUnit: string) {
 }
 
 // Event-related functions
+function timeToMinutes(timeStr: string): number {
+    // Standardize the time format first
+    const upperTime = timeStr.toUpperCase().trim();
+    const [time, period] = upperTime.split(' ');
+    let [hours, minutes] = time.split(':').map(Number);
+    
+    // Convert to 24-hour format
+    if (period === 'PM' && hours !== 12) {
+        hours += 12;
+    } else if (period === 'AM' && hours === 12) {
+        hours = 0;
+    }
+    
+    return hours * 60 + minutes;
+}
+
 export async function getEvents(): Promise<Event[]> {
     try {
         const eventsRef = collection(db, 'events');
         const snapshot = await getDocs(eventsRef);
 
+        let events: Event[] = [];
+
         if (snapshot.empty) {
             await initializeDefaultEvents();
             const newSnapshot = await getDocs(eventsRef);
-            return newSnapshot.docs.map(doc => {
-                const data = doc.data();
-                return {
-                    id: doc.id,
-                    day: data.day,
-                    time: data.time,
-                    session: data.session,
-                    details: data.details
-                };
-            });
+            events = newSnapshot.docs.map(docToEvent);
+        } else {
+            events = snapshot.docs.map(docToEvent);
         }
 
-        return snapshot.docs.map(doc => {
-            const data = doc.data();
-            return {
-                id: doc.id,
-                day: data.day,
-                time: data.time,
-                session: data.session,
-                details: data.details
-            };
+        // Sort events by day and time
+        return events.sort((a, b) => {
+            if (a.day !== b.day) {
+                return a.day - b.day;
+            }
+            return timeToMinutes(a.time) - timeToMinutes(b.time);
         });
     } catch (error) {
         console.error('Error getting events:', error);
@@ -89,14 +97,37 @@ export async function getEvents(): Promise<Event[]> {
     }
 }
 
+function docToEvent(doc: any): Event {
+    const data = doc.data();
+    return {
+        id: doc.id,
+        day: data.day,
+        time: data.time,
+        session: data.session,
+        details: data.details
+    };
+}
+
 // Add this function after the getEvents function
 async function initializeDefaultEvents() {
-    const defaultEvents = [
+    const events = [
         {
             day: 1,
-            time: "09:00 AM",
-            session: "Opening Keynote",
-            details: "Welcome address and company vision for 2024"
+            time: "9:30 AM",
+            session: "Ice breaker & Welcome Note",
+            details: null
+        },
+        {
+            day: 1,
+            time: "9:45 AM",
+            session: "Sneak peek into the next two days",
+            details: "Agenda + ground rules"
+        },
+        {
+            day: 1,
+            time: "10:00 AM",
+            session: "CFO's Sedin Vision - Setting the Pace for 2025",
+            details: "Mani will present the Vision for 2025, plus Q&A"
         },
         {
             day: 1,
@@ -127,12 +158,18 @@ async function initializeDefaultEvents() {
             time: "02:30 PM",
             session: "Closing Session",
             details: "Wrap up and future plans"
+        },
+        {
+            day: 2,
+            time: "6:15 PM",
+            session: "Dinner",
+            details: null
         }
     ];
 
     const eventsRef = collection(db, 'events');
 
-    for (const event of defaultEvents) {
+    for (const event of events) {
         await addDoc(eventsRef, event);
     }
 }
