@@ -13,6 +13,21 @@ interface Feedback {
     createdAt: string | null;
 }
 
+// Add timeToMinutes function
+function timeToMinutes(timeStr: string): number {
+    const upperTime = timeStr.toUpperCase().trim();
+    const [time, period] = upperTime.split(' ');
+    let [hours, minutes] = time.split(':').map(Number);
+    
+    if (period === 'PM' && hours !== 12) {
+        hours += 12;
+    } else if (period === 'AM' && hours === 12) {
+        hours = 0;
+    }
+    
+    return hours * 60 + minutes;
+}
+
 export default function AdminPage() {
     const router = useRouter();
     const [events, setEvents] = useState<Event[]>([]);
@@ -37,7 +52,15 @@ export default function AdminPage() {
                     feedbacksRes.json()
                 ]);
 
-                setEvents(eventsData);
+                // Sort events by day and time
+                const sortedEvents = [...eventsData].sort((a, b) => {
+                    if (a.day !== b.day) {
+                        return a.day - b.day;
+                    }
+                    return timeToMinutes(a.time) - timeToMinutes(b.time);
+                });
+
+                setEvents(sortedEvents);
                 setFeedbacks(feedbacksData);
             } catch (error) {
                 console.error('Error fetching data:', error);

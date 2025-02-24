@@ -109,7 +109,7 @@ function docToEvent(doc: any): Event {
 }
 
 // Add this function after the getEvents function
-async function initializeDefaultEvents() {
+export async function initializeDefaultEvents() {
     const events = [
         {
             day: 1,

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase/config';
 import { collection, getDocs, deleteDoc } from 'firebase/firestore';
+import { initializeDefaultEvents } from '@/lib/db';
 
 export async function POST() {
     try {
