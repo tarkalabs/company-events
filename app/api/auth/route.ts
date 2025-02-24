@@ -4,12 +4,18 @@ import type { User } from '@/app/types';
 
 export async function POST(request: Request) {
   try {
-    const { username } = await request.json();
+    const { username, businessUnit } = await request.json();
+
+    if (!username || !businessUnit) {
+      return NextResponse.json({ 
+        error: 'Username and business unit are required' 
+      }, { status: 400 });
+    }
 
     let user = await getUser(username) as User | null;
 
     if (!user) {
-      user = await createUser(username, 'default') as User;
+      user = await createUser(username, businessUnit) as User;
     }
 
     if (!user) {
@@ -42,7 +48,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Auth error:', error);
     return NextResponse.json(
-      { error: 'Failed to create user' },
+      { error: 'Failed to authenticate user' },
       { status: 500 }
     );
   }

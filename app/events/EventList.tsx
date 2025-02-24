@@ -116,6 +116,20 @@ const EventCard = React.memo(({ event, feedback, isEditing, onSubmit, onEdit }: 
 
 EventCard.displayName = 'EventCard';
 
+function timeToMinutes(timeStr: string): number {
+    const upperTime = timeStr.toUpperCase().trim();
+    const [time, period] = upperTime.split(' ');
+    let [hours, minutes] = time.split(':').map(Number);
+    
+    if (period === 'PM' && hours !== 12) {
+        hours += 12;
+    } else if (period === 'AM' && hours === 12) {
+        hours = 0;
+    }
+    
+    return hours * 60 + minutes;
+}
+
 export default function EventList() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);

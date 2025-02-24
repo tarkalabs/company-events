@@ -1,6 +1,10 @@
 import { useRouter } from 'next/navigation';
 
-const AdminHeader = () => {
+interface AdminHeaderProps {
+    onExport?: () => void;
+}
+
+const AdminHeader: React.FC<AdminHeaderProps> = ({ onExport }) => {
     const router = useRouter();
 
     const handleLogout = async () => {
@@ -17,6 +21,12 @@ const AdminHeader = () => {
     return (
         <div className="flex items-center gap-4">
             <h1 className="text-2xl font-bold text-white">Admin Dashboard</h1>
+            <button
+                onClick={onExport}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            >
+                Export All Feedbacks
+            </button>
             <button
                 onClick={handleLogout}
                 className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"

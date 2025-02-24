@@ -11,21 +11,10 @@ interface Feedback {
     rating: number;
     comments: string;
     createdAt: string | null;
-}
-
-// Add timeToMinutes function
-function timeToMinutes(timeStr: string): number {
-    const upperTime = timeStr.toUpperCase().trim();
-    const [time, period] = upperTime.split(' ');
-    let [hours, minutes] = time.split(':').map(Number);
-    
-    if (period === 'PM' && hours !== 12) {
-        hours += 12;
-    } else if (period === 'AM' && hours === 12) {
-        hours = 0;
-    }
-    
-    return hours * 60 + minutes;
+    user: {
+        username: string;
+        businessUnit: string;
+    };
 }
 
 export default function AdminPage() {
@@ -34,16 +23,37 @@ export default function AdminPage() {
     const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         async function fetchData() {
             try {
+                const adminData = localStorage.getItem('admin');
+                if (!adminData) {
+                    router.push('/login');
+                    return;
+                }
+
+                const admin = JSON.parse(adminData);
+                const headers = {
+                    'Authorization': `Bearer ${admin.id}`,
+                    'Content-Type': 'application/json'
+                };
+
+                console.log('Admin token:', admin.id); // Debug log
+
                 const [eventsRes, feedbacksRes] = await Promise.all([
-                    fetch('/api/admin/events'),
-                    fetch('/api/admin/feedbacks')
+                    fetch('/api/admin/events', { headers }),
+                    fetch('/api/admin/feedbacks', { headers })
                 ]);
 
                 if (!eventsRes.ok || !feedbacksRes.ok) {
+                    console.error('Response status:', { events: eventsRes.status, feedbacks: feedbacksRes.status });
+                    if (eventsRes.status === 401 || feedbacksRes.status === 401) {
+                        localStorage.removeItem('admin');
+                        router.push('/login');
+                        return;
+                    }
                     throw new Error('Failed to fetch data');
                 }
 
@@ -52,25 +62,22 @@ export default function AdminPage() {
                     feedbacksRes.json()
                 ]);
 
-                // Sort events by day and time
-                const sortedEvents = [...eventsData].sort((a, b) => {
-                    if (a.day !== b.day) {
-                        return a.day - b.day;
-                    }
-                    return timeToMinutes(a.time) - timeToMinutes(b.time);
-                });
-
-                setEvents(sortedEvents);
+                const eventsWithFeedback = eventsData.filter((event: Event) => 
+                    feedbacksData.some((feedback: Feedback) => feedback.eventId === event.id)
+                );
+                
+                setEvents(eventsWithFeedback);
                 setFeedbacks(feedbacksData);
             } catch (error) {
                 console.error('Error fetching data:', error);
+                setError('Failed to load data');
             } finally {
                 setLoading(false);
             }
         }
 
         fetchData();
-    }, []);
+    }, [router]);
 
     const handleLogout = async () => {
         try {
@@ -169,7 +176,10 @@ export default function AdminPage() {
                                             </span>
                                         </div>
                                         <p className="text-white/80">{feedback.comments}</p>
-                                        <p className="text-white/60 text-sm">User: {feedback.userId}</p>
+                                        <div className="text-white/60 text-sm space-y-1">
+                                            <p>User: {feedback.user?.username || 'Unknown'}</p>
+                                            <p>Business Unit: {feedback.user?.businessUnit || 'Unknown'}</p>
+                                        </div>
                                     </div>
                                 ))}
                             </div>

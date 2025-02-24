@@ -1,39 +1,48 @@
 import { NextResponse } from 'next/server';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '@/lib/firebase/config';
-
-// Simplify admin credentials
-const ADMIN_USERNAME = 'admin@example.com';
-const ADMIN_PASSWORD = 'admin123';
+import { verifyAdmin } from '@/lib/db';
 
 export async function POST(request: Request) {
     try {
         const { username, password } = await request.json();
-
-        if (!username || !password) {
-            return NextResponse.json(
-                { error: 'Username and password are required' },
-                { status: 400 }
-            );
-        }
-
-        // Compare with hardcoded values for now
-        if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
-            return NextResponse.json(
-                { error: 'Invalid credentials' },
-                { status: 401 }
-            );
-        }
         
-        return NextResponse.json({ 
+        if (!username || !password) {
+            return NextResponse.json({ 
+                success: false, 
+                error: 'Username and password are required' 
+            }, { status: 400 });
+        }
+
+        console.log('[admin] Login attempt:', { username });
+        
+        if (!process.env.ADMIN_USERNAME || !process.env.ADMIN_PASSWORD) {
+            console.error('[admin] Admin credentials not configured in environment');
+            return NextResponse.json({ 
+                success: false, 
+                error: 'Admin authentication not configured' 
+            }, { status: 500 });
+        }
+
+        const admin = await verifyAdmin(username, password);
+        
+        if (!admin) {
+            return NextResponse.json({ 
+                success: false, 
+                error: 'Invalid admin credentials' 
+            }, { status: 401 });
+        }
+
+        return NextResponse.json({
             success: true,
-            admin: { username: ADMIN_USERNAME }
+            admin: {
+                id: admin.id,
+                username: admin.username
+            }
         });
     } catch (error) {
-        console.error('Admin auth error:', error);
-        return NextResponse.json(
-            { error: 'Authentication failed' },
-            { status: 500 }
-        );
+        console.error('[admin] Login error:', error);
+        return NextResponse.json({ 
+            success: false, 
+            error: 'Login failed' 
+        }, { status: 500 });
     }
 } 

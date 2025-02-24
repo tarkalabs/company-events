@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
+  const [businessUnit, setBusinessUnit] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
@@ -48,12 +49,12 @@ export default function LoginPage() {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ username }),
+          body: JSON.stringify({ username, businessUnit }),
         });
 
         const data = await response.json();
 
-        if (response.ok) {
+        if (response.ok && data.success) {
           localStorage.setItem('user', JSON.stringify(data.user));
           router.push('/events');
         } else {
@@ -99,6 +100,22 @@ export default function LoginPage() {
               required
             />
           </div>
+
+          {!isAdmin && (
+            <div>
+              <label htmlFor="businessUnit" className="block text-sm font-medium text-white mb-2">
+                Business Unit
+              </label>
+              <input
+                type="text"
+                id="businessUnit"
+                value={businessUnit}
+                onChange={(e) => setBusinessUnit(e.target.value)}
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white"
+                required
+              />
+            </div>
+          )}
           
           {isAdmin && (
             <div>

@@ -1,31 +1,39 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/firebase/config';
-import { collection, getDocs } from 'firebase/firestore';
+import { getAllFeedbacksWithUserDetails } from '@/lib/db';
+import { verifyAdminToken } from '@/lib/auth';
 
-export async function GET() {
+export async function GET(request: Request) {
     try {
-        console.log('[API] Fetching all feedbacks');
-        const feedbacksRef = collection(db, 'feedbacks');
-        const snapshot = await getDocs(feedbacksRef);
-        
-        const feedbacks = snapshot.docs.map(doc => {
-            const data = doc.data();
-            return {
-                id: doc.id,
-                eventId: data.eventId,
-                userId: data.userId,
-                rating: data.rating,
-                comments: data.comments,
-                createdAt: data.updatedAt?.toDate?.().toISOString() || null
-            };
-        });
+        const authHeader = request.headers.get('Authorization');
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return NextResponse.json(
+                { error: 'Unauthorized - Admin access required' },
+                { status: 401 }
+            );
+        }
 
-        console.log('[API] Retrieved feedbacks:', feedbacks);
+        const token = authHeader.split('Bearer ')[1];
+        if (!token) {
+            return NextResponse.json(
+                { error: 'Invalid admin token' },
+                { status: 401 }
+            );
+        }
+
+        const isValid = await verifyAdminToken(token);
+        if (!isValid) {
+            return NextResponse.json(
+                { error: 'Invalid or expired admin token' },
+                { status: 401 }
+            );
+        }
+
+        const feedbacks = await getAllFeedbacksWithUserDetails();
         return NextResponse.json(feedbacks);
     } catch (error) {
-        console.error('[API] Error fetching feedbacks:', error);
+        console.error('Error fetching admin feedbacks:', error);
         return NextResponse.json(
-            { error: 'Failed to fetch feedbacks' },
+            { error: 'Failed to fetch feedback data' },
             { status: 500 }
         );
     }
